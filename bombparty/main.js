@@ -3,6 +3,7 @@ let CONFIG = {
     max_word_len: 10,
     complete_bonus: 1,
     complete_interval: 500,
+    complete_delay: 0,
     dictionary_url: ""
 }
 
@@ -14,6 +15,7 @@ try {
         CONFIG.max_word_len = parsed_config.max_word_len;
         CONFIG.complete_bonus = parsed_config.complete_bonus;
         CONFIG.complete_interval = parsed_config.complete_interval;
+        CONFIG.complete_delay = parsed_config.complete_delay;
         CONFIG.dictionary_url = parsed_config.dictionary_url;
     }
 } catch(e) {
@@ -47,8 +49,12 @@ let UI_STR = `
             <input type="number" value="${CONFIG.complete_interval}" id="jklmc-inp4">
         </div>
         <div class="jklmc-ui-config">
+            <p>Complete delay:</p>
+            <input type="number" value="${CONFIG.complete_delay}" id="jklmc-inp5">
+        </div>
+        <div class="jklmc-ui-config">
             <p>Dictionary URL:</p>
-            <input type="text" value="${CONFIG.dictionary_url}" id="jklmc-inp5">
+            <input type="text" value="${CONFIG.dictionary_url}" id="jklmc-inp6">
         </div>
         <div id="jklmc-ui-cbtns">
             <span id="jklm-ui-cbtns-r">Revert Changes</span>
@@ -207,13 +213,15 @@ const inp2 = document.getElementById("jklmc-inp2")
 const inp3 = document.getElementById("jklmc-inp3")
 const inp4 = document.getElementById("jklmc-inp4")
 const inp5 = document.getElementById("jklmc-inp5")
+const inp6 = document.getElementById("jklmc-inp6")
 
 const same_as_config = function() {
     return parseInt(inp1.value) == CONFIG.min_word_len &&
            parseInt(inp2.value) == CONFIG.max_word_len &&
            parseInt(inp3.value) == CONFIG.complete_bonus &&
            parseInt(inp4.value) == CONFIG.complete_interval &&
-           inp5.value == CONFIG.dictionary_url;
+           parseInt(inp5.value) == CONFIG.complete_delay &&
+           inp6.value == CONFIG.dictionary_url;
 }
 
 const cf_btns = document.getElementById("jklmc-ui-cbtns")
@@ -233,13 +241,15 @@ inp2.addEventListener("input", listen_config_change);
 inp3.addEventListener("input", listen_config_change);
 inp4.addEventListener("input", listen_config_change);
 inp5.addEventListener("input", listen_config_change);
+inp6.addEventListener("input", listen_config_change);
 
 cf_btns_r.addEventListener("click", function() {
     inp1.value = CONFIG.min_word_len;
     inp2.value = CONFIG.max_word_len;
     inp3.value = CONFIG.complete_bonus;
     inp4.value = CONFIG.complete_interval;
-    inp5.value = CONFIG.dictionary_url;
+    inp5.value = CONFIG.complete_delay;
+    inp6.value = CONFIG.dictionary_url;
     cf_btns.classList.remove("active");
 });
 
@@ -248,7 +258,8 @@ cf_btns_a.addEventListener("click", async function() {
     CONFIG.max_word_len = inp2.value;
     CONFIG.complete_bonus = inp3.value;
     CONFIG.complete_interval = inp4.value;
-    CONFIG.dictionary_url = inp5.value;
+    CONFIG.complete_delay = inp5.value;
+    CONFIG.dictionary_url = inp6.value;
     config_save();
     cf_btns.classList.remove("active");
     await try_load_dict();
@@ -324,6 +335,8 @@ const send_word = async function() {
     if (CACHE.dict[CACHE.syllable][word_len].length == 0) {
         delete CACHE.dict[CACHE.syllable][word_len];
     }
+
+    await new Promise((r) => setTimeout(r, CONFIG.complete_delay));
 
     let buff = new String();
     for (let i = 0; i < word.length; i++) {
